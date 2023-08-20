@@ -220,6 +220,21 @@ squareInc : Num a => a -> a
 squareInc x = let sx := x + 1 in sx * sx
 ```
 
+### Where Blocks
+
+Function definitions in a `where` block should follow on the next line
+indented by two spaces. Consider adding a blank line before the `where`
+keyword for enhanced readability:
+
+```idris
+sumSquares : Num a => List a -> a
+sumSquares = foldl acc 0
+
+  where
+    acc : a -> a -> a
+    acc sum v = sum + v * v
+```
+
 ### Function Declarations
 
 Prefer named arguments over unnamed ones especially when there
