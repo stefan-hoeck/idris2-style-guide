@@ -162,7 +162,7 @@ fibonacci =
 
 ### Case Expressions
 
-Consider starting a case blocks on a new line when it helps
+Consider starting a case block on a new line when it helps
 readability:
 
 ```idris
@@ -226,14 +226,15 @@ lengthyFunctionDecl:
   -> Either String (List Nat)
 ```
 
-In case of auto-implicit arguments, using `{auto _ : Foo}` syntax
+In case of auto-implicit arguments, using `{auto _ : Foo}` syntax (with
+an underscore for the name or an explicit name)
 in multi-line function declarations instead of interface arrows (`=>`)
 is mandatory, because it greatly enhances readability:
 
 ```idris
 programm:
      {auto _   : HasIO io}
-  -> {auto _   : Eq t}
+  -> {auto eq  : Eq t}
   -> (numLines : Nat)
   -> (keep     : t -> Bool)
   -> io (Either String (List t))
@@ -299,7 +300,7 @@ parameters {auto _ : HasIO io}
 ```
 
 This style is also well suited for injecting dependencies into
-functions by means of auto-implicit arguments. I prefer this over
+functions by means of auto-implicit arguments. I strongly prefer this over
 using the `ReaderT` monad transformer.
 
 Here is an example skeleton application demonstrating this. We annotate
@@ -345,7 +346,11 @@ parameters {auto conf : Config}
   program : IO ()
 
 main : IO ()
-main = program {conf = defltConfig, log = emptyLogger}
+main =
+  program
+    { conf = defltConfig
+    , log  = emptyLogger
+    }
 ```
 
 <!-- vi: filetype=idris2:syntax=markdown
