@@ -353,5 +353,31 @@ main =
     }
 ```
 
+## Interfaces
+
+These notes are especially important for people coming from Haskell.
+
+Idris is not Haskell and interfaces are not type classes although there
+are several interfaces in the core libraries with corresponding Haskell
+type classes.
+
+That said, think twice before defining your own interface. Even though
+there might be a corresponding type class in Haskell, you may not need it.
+Idris supports overloaded function names without the need of using an
+interface. Also, interface resolution is just a special case of
+proof search, and as such, many programming patterns that can only be
+implemented with a type class in Haskell are more naturally written
+with predicates and proof search in Idris.
+
+Finally, interfaces in Idris are first-class: You can write
+an implementation manually and pass it around explicitly:
+
+```idris
+myEq : Eq Bool
+myEq = MkEq (\_,_ => False) (\_,_ => True)
+
+test : Bool -> Bool -> Bool
+test = (==) @{myEq}
+```
 <!-- vi: filetype=idris2:syntax=markdown
 -->
