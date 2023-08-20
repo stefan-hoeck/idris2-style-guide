@@ -200,6 +200,26 @@ orderNr s = case toLower s of
   _    => Nothing
 ```
 
+### Let Expressions
+
+Use `:=` instead of the overloaded `=` in let expressions. Also,
+indent the `let` keyword by two spaces and the `in` keyword by three:
+
+```idris
+addSquares : Num a => (x,y : a) -> a
+addSquares x y =
+  let sx := x * x
+      sy := y * y
+   in sx + sy
+```
+
+Short `let` expressions can also be written on a single line:
+
+```idris
+squareInc : Num a => a -> a
+squareInc x = let sx := x + 1 in sx * sx
+```
+
 ### Function Declarations
 
 Prefer named arguments over unnamed ones especially when there
