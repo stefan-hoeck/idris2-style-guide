@@ -200,7 +200,7 @@ orderNr s = case toLower s of
   _    => Nothing
 ```
 
-## Function Declarations
+### Function Declarations
 
 Prefer named arguments over unnamed ones especially when there
 are several arguments of the same type:
@@ -244,6 +244,10 @@ programm:
 
 Write documentation for all exported top-level functions, interfaces
 and data types.
+
+This is probably the most important rule in this style guide, and the one
+I too often neglect myself. Documentation is of uttermost important
+and writing clear, concise documentation is very hard.
 
 ## Mutually recursive Functions
 
