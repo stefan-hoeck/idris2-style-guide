@@ -1,6 +1,6 @@
 # A Style Guide for writing Idris Code
 
-This is the coding style I try to adhere to in my Idris project. Older
+This is the coding style I try to adhere to in my Idris projects. Older
 projects might still use a variety of other styles but I'm working on
 transferring them all to the style presented here.
 
@@ -243,6 +243,110 @@ programm:
 
 Write documentation for all exported top-level functions, interfaces
 and data types.
+
+## Mutually recursive Functions
+
+Avoid `mutual` blocks and prefer declaring mutually recursive
+functions before writing their definitions:
+
+```idris
+even : Nat -> Bool
+
+odd : Nat -> Bool
+
+even 0     = True
+even (S k) = not (odd k)
+
+odd 0     = False
+odd (S k) = not (even k)
+```
+
+This also works for mutually recursive data types:
+
+```idris
+data Forest : Type -> Type
+
+data Tree : Type -> Type
+
+data Forest where
+  Nil  : Forest a
+  (::) : Tree a -> Forest a -> Forest a
+
+data Tree where
+  Leaf   : (val : a) -> Tree a
+  Branch : (val : a) -> (children : Forest a) -> Tree a
+```
+
+## Parameters Blocks
+
+In order to reduce the length of function declarations sharing
+one or more read-only arguments (parameters), consider using a
+`parameters` block. This works especially well with auto-implicit
+arguments:
+
+```idris
+parameters {auto _ : HasIO io}
+           {auto _ : Num t}
+           {auto _ : Ord t}
+           {auto _ : Neg t}
+           {auto _ : Show t}
+
+  printAbs : t -> io ()
+  printAbs v = if v < 0 then printLn (negate v) else printLn v
+
+  printDiff : t -> t -> io () 
+  printDiff x y = printAbs (x - y)
+```
+
+This style is also well suited for injecting dependencies into
+functions by means of auto-implicit arguments. I prefer this over
+using the `ReaderT` monad transformer.
+
+Here is an example skeleton application demonstrating this. We annotate
+our auto implicit utilities with `[noHints]` to make sure Idris2 does
+not come up with some unexpected and nonsensical default value during
+proof search:
+
+```idris
+data LogLevel = Debug | Info | Warn | Err
+
+record Logger where
+  [noHints]
+  constructor MkLogger
+  log : LogLevel -> Lazy String -> IO ()
+
+emptyLogger : Logger
+emptyLogger = MkLogger $ \_,_ => pure ()
+
+record Config where
+  [noHints]
+  constructor MkConfig
+  numberOfThreads : Nat
+  maxLineLength   : Nat
+  maxFileSize     : Nat
+  useColor        : Bool
+  caseSensitive   : Bool
+
+defltConfig : Config
+defltConfig =
+  MkConfig
+    { numberOfThreads = 1
+    , maxLineLength   = 80
+    , maxFileSize     = 1_000_000_000
+    , useColor        = False
+    , caseSensitive   = True
+    }
+
+parameters {auto conf : Config}
+           {auto log  : Logger}
+
+  utility : IO Nat
+
+  program : IO ()
+
+main : IO ()
+main = program {conf = defltConfig, log = emptyLogger}
+```
 
 <!-- vi: filetype=idris2:syntax=markdown
 -->
