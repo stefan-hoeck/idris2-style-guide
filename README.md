@@ -11,7 +11,9 @@ This is loosely based on
 
 ### Line Length
 
-Maximum line length is 80 characters.
+Maximum line length is 80 characters. In general, if an expression exceeds
+the maximum line length, it should be moved to the next line, indented by
+two spaces, and split onto several lines as shown in detail below.
 
 ### Indentation
 
@@ -22,6 +24,7 @@ indentation is minimal without violating the maximum line length.
 ```idris
 module README
 
+import Data.IORef
 import Data.String
 
 hello : IO ()
@@ -57,12 +60,13 @@ Aligning `case` blocks:
 
 ```idris
 nucleobase : String -> Maybe String
-nucleobase s = case toLower s of
-  "adenine"  => Just "A"
-  "guanine"  => Just "G"
-  "thymine"  => Just "T"
-  "cytosine" => Just "C"
-  _          => Nothing
+nucleobase s =
+  case toLower s of
+    "adenine"  => Just "A"
+    "guanine"  => Just "G"
+    "thymine"  => Just "T"
+    "cytosine" => Just "C"
+    _          => Nothing
 ```
 
 Aligning `do` blocks:
@@ -162,8 +166,8 @@ fibonacci =
 
 ### Case Expressions
 
-Consider starting a case block on a new line when it helps
-readability:
+Start a case block on a new line indented by two characters for
+improved readability:
 
 ```idris
 printValues : List Ordering -> IO ()
@@ -180,24 +184,54 @@ The above could also be written with lambda-case syntax:
 ```idris
 printValues' : List Ordering -> IO ()
 printValues' vs =
-  for_ vs $ \case
-    LT => putStrLn "less than"
-    GT => putStrLn "greater than"
-    EQ => printLn 0
+  for_ vs $
+    \case
+      LT => putStrLn "less than"
+      GT => putStrLn "greater than"
+      EQ => printLn 0
 ```
 
-For non-nested case blocks it's also OK to start them on the current line:
+Another example:
 
 ```idris
 orderNr : String -> Maybe Nat
-orderNr s = case toLower s of
-  "h"  => Just 1
-  "he" => Just 2
-  "li" => Just 3
-  "be" => Just 4
-  "b"  => Just 5
-  "c"  => Just 6
-  _    => Nothing
+orderNr s =
+  case toLower s of
+    "h"  => Just 1
+    "he" => Just 2
+    "li" => Just 3
+    "be" => Just 4
+    "b"  => Just 5
+    "c"  => Just 6
+    _    => Nothing
+```
+
+If the right-hand side of an arrow in a case block is too long,
+begin a new line, indent by two, and split everything across several
+lines:
+
+```idris
+describeVals : (x,y : Nat) -> String
+describeVals x y =
+  case compare x y of
+    LT =>
+      """
+      x: \{show x}
+      y: \{show x}
+      x is less than y
+      """
+    EQ =>
+      """
+      x: \{show x}
+      y: \{show x}
+      x is equal to y
+      """
+    GT =>
+      """
+      x: \{show x}
+      y: \{show x}
+      x is greater than y
+      """
 ```
 
 ### Let Expressions
@@ -218,6 +252,20 @@ Short `let` expressions can also be written on a single line:
 ```idris
 squareInc : Num a => a -> a
 squareInc x = let sx := x + 1 in sx * sx
+```
+
+As with `case` blocks: If the right-hand side of a variable assignment
+is too long, move to the next line, indent by two spaces (relative
+to the variable's name) and split across several lines:
+
+```idris
+lengthyLet : (x,y,z : Nat) -> Nat
+lengthyLet x y z =
+  let foo :=
+        if x < y || z * z > y || y == 0
+           then z * (y + x)
+           else 2 * x + z
+   in foo * foo
 ```
 
 ### Where Blocks
@@ -273,6 +321,99 @@ programm:
   -> (numLines : Nat)
   -> (keep     : t -> Bool)
   -> io (Either String (List t))
+```
+
+### Function Application
+
+When a function application exceeds the line limit, move to the next
+line, indent by two spaces, and list every argument on its own line,
+again indented by two spaces:
+
+```idris
+record Person where
+  constructor MkPerson
+  name    : String
+  age     : Nat
+  hobbies : List String
+
+me : Person
+me =
+  MkPerson
+    "Stefan Höck"
+    45
+    [ "writing Idris style guides"
+    , "family"
+    , "playing (classical) guitar"
+    , "hiking"
+    ]
+```
+
+In case of functions with named arguments (such as `MkPerson`
+above), consider using named arguments during function application
+as well. The code will become much clearer, and changing the order
+of arguments in a function definition will not affect your
+function application:
+
+```idris
+meAgain : Person
+meAgain =
+  MkPerson
+    { name    = "Stefan Höck"
+    , age     = 45
+    , hobbies =
+        [ "writing Idris style guides"
+        , "family"
+        , "playing (classical) guitar"
+        , "hiking"
+        ]
+    }
+```
+
+### Idiom Brackets
+
+When the function application in a pair of idiom brackets exceeds the
+preferred line length, proceed as with function application in general
+and put the closing idiom brackets on their own line:
+
+```idris
+nameM : Maybe String
+nameM = Nothing
+
+ageM : Maybe Nat
+ageM = Nothing
+
+maybeMe : Maybe Person
+maybeMe =
+  [| MkPerson
+       nameM
+       ageM
+       (Just ["writing Idris style guides", "family", "head banging"])
+  |]
+```
+
+### `do` blocks
+
+Always start `do` blocks on a new line indented by two spaces with
+the `do` keyword being the last token on the previous line:
+
+```idris
+myProg : IO ()
+myProg = do
+  putStr "Please enter a natural number: "
+  s1 <- map trim getLine
+  case cast {to = Nat} s1 of
+    0 => putStrLn "Not going to read any more numbers."
+    n => do
+      ref <- newIORef Z
+      putStrLn "Reading \{show n} numbers now:"
+
+      for_ [1..n] $ \i => do
+        putStr "Enter number \{show i}: "
+        s <- map trim getLine
+        modifyIORef ref $ (+ cast s)
+
+      val <- readIORef ref
+      putStrLn "Total sum is \{show val}"
 ```
 
 ## Comments
